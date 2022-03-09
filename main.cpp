@@ -30,6 +30,9 @@ void print_help (const char* route)
         << "options:" << std::endl
         << "  --silent\t\tMutes all the sound the wallpaper might produce" << std::endl
         << "  --screen-root <screen name>\tDisplay as screen's background" << std::endl
+        << "  --gtk\t\tForces usage of GTK to place the window in the background" << std::endl
+        << "  --qt\t\tForces usage of QT to place the window in the background" << std::endl
+        << "  --xserver\t\tForces usage of X11 to place the window in the background" << std::endl
         << "  --fps <maximum-fps>\tLimits the FPS to the given number, useful to keep battery consumption low" << std::endl;
 }
 
@@ -65,6 +68,7 @@ int main (int argc, char* argv[])
     int maximumFPS = 30;
     bool shouldEnableAudio = true;
     std::string path;
+    WallpaperEngine::Render::DesktopEnvironment desktopEnvironment = WallpaperEngine::Render::UNKNOWN;
 
     static struct option long_options [] = {
         {"screen-root", required_argument, 0, 'r'},
@@ -73,6 +77,9 @@ int main (int argc, char* argv[])
         {"silent",      no_argument,       0, 's'},
         {"help",        no_argument,       0, 'h'},
         {"fps",         required_argument, 0, 'f'},
+        {"gtk",         no_argument,       0, 'k'},
+        {"qt",          no_argument,       0, 'q'},
+        {"xserver",     no_argument,       0, 'x'},
         {nullptr,              0, 0,   0}
     };
 
@@ -85,6 +92,15 @@ int main (int argc, char* argv[])
 
         switch (c)
         {
+            case 'k':
+                desktopEnvironment = WallpaperEngine::Render::DesktopEnvironment::GNOME;
+                break;
+            case 'q':
+                desktopEnvironment = WallpaperEngine::Render::DesktopEnvironment::KDE;
+                break;
+            case 'x':
+                desktopEnvironment = WallpaperEngine::Render::DesktopEnvironment::i3;
+                break;
             case 'r':
                 screens.emplace_back (optarg);
                 break;
@@ -234,7 +250,7 @@ int main (int argc, char* argv[])
         chdir (path.c_str ());
 
     // initialize custom context class
-    WallpaperEngine::Render::CContext* context = new WallpaperEngine::Render::CContext (screens, window);
+    WallpaperEngine::Render::CContext* context = new WallpaperEngine::Render::CContext (desktopEnvironment, screens, window);
     // initialize mouse support
     context->setMouse (new CMouseInput (window));
     // set the default viewport

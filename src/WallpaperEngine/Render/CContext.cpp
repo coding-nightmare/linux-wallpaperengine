@@ -11,13 +11,15 @@
 
 using namespace WallpaperEngine::Render;
 
-CContext::CContext (std::vector <std::string> screens, GLFWwindow* window) :
+CContext::CContext (DesktopEnvironment de, std::vector <std::string> screens, GLFWwindow* window) :
     m_wallpaper (nullptr),
     m_screens (std::move (screens)),
     m_isRootWindow (m_screens.empty () == false),
     m_defaultViewport ({0, 0, 1920, 1080}),
-    m_window (window)
+    m_window (window),
+    m_de (de)
 {
+    this->detectDesktopEnvironment ();
     this->initializeViewports ();
 }
 
@@ -98,6 +100,48 @@ void CContext::initializeViewports ()
 
     // create the image for X11 to be able to copy it over
     this->m_image = XCreateImage (this->m_display, CopyFromParent, 24, ZPixmap, 0, this->m_imageData, fullWidth, fullHeight, 32, 0);
+}
+
+void CContext::detectDesktopEnvironment ()
+{
+    // allow the user to override the way it works
+    if (this->m_de == DesktopEnvironment::UNKNOWN)
+    {
+        std::cout << "Detecting desktop environment... ";
+
+        char* de = getenv ("XDG_CURRENT_DESKTOP");
+
+        if (strcmp ("GNOME", de) == 0)
+            this->m_de = DesktopEnvironment::GNOME;
+        else if (strcmp ("KDE", de) == 0)
+            this->m_de = DesktopEnvironment::KDE;
+        else if (strcmp ("i3", de) == 0)
+            this->m_de = DesktopEnvironment::i3;
+        else
+            this->m_de = DesktopEnvironment::UNKNOWN;
+    }
+    else
+    {
+        std::cout << "Running in forced mode... ";
+    }
+
+    switch (this->m_de)
+    {
+        case DesktopEnvironment::GNOME:
+            std::cout << "GNOME!";
+            break;
+        case DesktopEnvironment::KDE:
+            std::cout << "KDE!";
+            break;
+        case DesktopEnvironment::i3:
+            std::cout << "i3!";
+            break;
+        case DesktopEnvironment::UNKNOWN:
+            std::cout << "unknown!";
+            break;
+    }
+
+    std::cout << std::endl;
 }
 
 CContext::~CContext()

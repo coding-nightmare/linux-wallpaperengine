@@ -11,15 +11,21 @@ using namespace WallpaperEngine::Input;
 
 namespace WallpaperEngine::Render
 {
+    enum DesktopEnvironment
+    {
+        GNOME = 0,
+        KDE = 1,
+        i3 = 2,
+        UNKNOWN = -1
+    };
+
     class CWallpaper;
 
     class CContext
     {
     public:
-        CContext (std::vector <std::string> screens, GLFWwindow* window);
+        CContext (DesktopEnvironment de, std::vector <std::string> screens, GLFWwindow* window);
         ~CContext ();
-
-        void initializeViewports ();
         void render ();
         void setWallpaper (CWallpaper* wallpaper);
         void setDefaultViewport (glm::vec4 defaultViewport);
@@ -27,6 +33,10 @@ namespace WallpaperEngine::Render
         void setMouse (CMouseInput* mouse);
 
     private:
+        void initializeViewports ();
+        void detectDesktopEnvironment ();
+
+        DesktopEnvironment m_de;
         Display* m_display;
         Pixmap m_pixmap;
         GC m_gc;
